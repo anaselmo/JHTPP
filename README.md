@@ -2,6 +2,15 @@
 
 Really basic Hyper Text Preprocessor made in Java.
 
+# Table of Contents
+
+1. [Authors](#authors)
+2. [How to use the example](#how-to-use-the-example)
+3. [How to use the library](#how-to-use-the-library)
+    1. [In Java](#in-java)
+    2. [In HTML](#in-html)
+4. [Example](#example)
+
 ## Authors
 
 - [@anaselmo](https://github.com/anaselmo)
