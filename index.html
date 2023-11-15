@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi primera pagina web</title>
+</head>
+<body>
+    <h1>Hola, {{nombre}}!</h1>
+    <p>Bienvenido a mi primera pagina web, {{nombre3}}!</p>
+    
+    {% for d1 in dias %}
+        {{d1.nombre}}
+        {%for exercise in d1.ejercicios %}
+            <p>{{exercise}}</p>
+        {%endfor exercise%}
+    {%endfor d1 %}
+
+    <div>{{dias.0.nombre}}</div>
+
+</body>
+</html>
