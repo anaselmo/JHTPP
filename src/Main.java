@@ -88,7 +88,7 @@ public class Main {
         ejer_domingo.put("1","Descanso!");
 
         
-        JHTPP tp = new JHTPP("Path","./index.html", lista);
+        JHTPP tp = new JHTPP(InputType.PATH,"./index.html", lista);
         System.out.println(tp.processText());
     }
 }

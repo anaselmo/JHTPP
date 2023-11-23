@@ -8,11 +8,16 @@
     <p>Bienvenido a mi primera pagina web, {{nombre3}}!</p>
     
     {% for d1 in dias %}
-        {{d1.nombre}}
+    {{d1.nombre}}
         {%for exercise in d1.ejercicios %}
-            <p>{{exercise}}</p>
+        <p>{{exercise}}</p>
         {%endfor exercise%}
     {%endfor d1 %}
+
+    {% if a %}
+    Hola
+    HOLA
+    {% endif a %}
 
     <div>{{dias.0.nombre}}</div>
 

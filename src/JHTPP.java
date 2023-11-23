@@ -16,19 +16,57 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class JHTPP {
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+    //-------------------- ATRIBUTOS DE LA CLASE ----------------------//
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //----------------- CONSTANTES - EXPRESIÓN REGULAR ----------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
+
     // Definimos la expresión regular:
     // Grupo 1: {{var}} -> var
+    final private String REG_EXP_VAR =  "\\{\\{\\s*([^\\s]+)\\s*\\}\\}"; // Group 1
+
     // Grupo 2: {% for x in array %} (...) {% endfor x %} -> primera 'x'
     // Grupo 3: {% for x in array %} (...) {% endfor x %} -> 'array'
-    // Grupo 4: {% for x in array %} (...) {% endfor x %} -> '(...)'', es decir, el contenido del bucle
+    // Grupo 4: {% for x in array %} (...) {% endfor x %} -> '(...)', es decir, el contenido del bucle
     // Grupo 5: {% for x in array %} (...) {% endfor x %} -> última 'x'
-    // PS: Pattern.DOTALL, hace que el '.' pueda ser cualquier cosa (incluyendo \n)
-    final private String REG_EXP_VAR =  "\\{\\{\\s*([^\\s]+)\\s*\\}\\}"; // Group 1
-    final private String REG_EXP_FOR =  "\\{\\%\\s*for\\s+([[a-z][A-Z0-9]*]+)\\s+in\\s+([a-z][a-zA-Z0-9\\.]*)\\s*\\%\\}"+ // Group 2 y 3
-                                        "[[\\n]*[\\t]*[\\s]*]*?(.+)[[\\n]*[\\t]*[\\s]*]*?"+ // Group 4
-                                        "\\{\\%\\s*endfor\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}[\\n]"; //Group 5
+    final private String REG_EXP_FOR = "\\{\\%\\s*for\\s+([[a-z][A-Z0-9]*]+)\\s+in\\s+([a-z][a-zA-Z0-9\\.]*)\\s*\\%\\}"+ // Group 2 y 3
+                                        "[\\n\\t\\s]*(.+)[\\n\\t\\s]*"+ // Group 4
+                                        "\\{\\%\\s*endfor\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}"; //Group 5
+    
+    // Grupo 6: {% if cond %} (...) {% endif cond %} -> primera 'cond'
+    // Grupo 7: {% if cond %} (...) {% endif cond %} -> '(...)', es decir, el contenido del if
+    // Grupo 8: {% if cond %} (...) {% endif cond %} -> última 'cond'
+    final private String REG_EXP_IF  =  "\\{\\%\\s*if\\s+([[a-z][A-Z0-9]*]+)\\s*\\%\\}"+ // Group 6
+                                        "[\\n*\\t*\\s*]*(.+)[\\n*\\t*\\s*]*?"+ // Group 7
+                                        "\\{\\%\\s*endif\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}[\\n]"; // Group 8 
+
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //--------------------------- VARIABLES ---------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
     private String text;
     private VarTree tree;
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+    //--------------------- MÉTODOS DE LA CLASE -----------------------//
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //--------------------------- CONSTRUCTOR -------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
 
     /**
      * @brief Constructor de la clase JHTPP
@@ -37,19 +75,22 @@ public class JHTPP {
      * @param tree  
      * @throws IOException
      */
-    public JHTPP(String type, String s, VarTree tree) throws IOException  {
+    public JHTPP(InputType type, String str, VarTree tree) throws IOException  {
         switch (type){
-            case "path": case "Path": case "PATH":
-            case "path_file": case "Path_file": case "PATH_FILE":
-            case "pathfile":  case "Pathfile":  case "PATHFILE": case "PathFile": 
-            case "file":      case "File":      case "FILE":
-                this.text = pathToString(s);
+            case PATH:
+                this.text = pathToString(str);
                 break;
-            default:
-                this.text = s;
+            case CONTENT:
+                this.text = str;
         }
         this.tree = tree;
     }
+
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //------------------------- PATH TO STRING ------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
 
     /**
      * @brief Crea un string con la información de la ruta pasada como parámetro
@@ -72,6 +113,12 @@ public class JHTPP {
         return out_s.toString();
     }
 
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //-------------------------- READ METHODS -------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
+
     /**
      * @brief 
      * @param var
@@ -87,6 +134,9 @@ public class JHTPP {
         }
         return aux.getString(parts[parts.length-1]);
     }
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
 
     /**
      * 
@@ -104,6 +154,12 @@ public class JHTPP {
         return aux.get(parts[parts.length-1]);
     }
 
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //---------------------------- HANDLERS ---------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
+
     /**
      * @brief Maneja las expresiones regulares de tipo {{var}}
      * @param matcher
@@ -115,44 +171,71 @@ public class JHTPP {
         String varValue = readVar(varName);
 
         if (varValue != null) {
+            //output.append("b");
             output.append(varValue);
+            //output.append("e");
         } else {
             output.append("{{").append(varName).append("}}");
         }
         return output.toString();
     }
 
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
     /**
-     * @brief Maneja las expresiones regulares de tipo {% for x in array %} (...) {% endfor x %}
+     * Maneja las expresiones regulares de tipo 
+     * {% for x in array %} (...) {% endfor x %}
      * @param matcher
      * @return Devuelve el contenido del bucle procesado
      * @throws IOException
      */
     private String handleFor(Matcher matcher) throws IOException {
         StringBuilder output = new StringBuilder();
-        String loopVar = matcher.group(2);
-        String loopArrayName = matcher.group(3);
-        VarTree loopValues = readTree(loopArrayName);
-        String loopBody = matcher.group(4);
+        String var = matcher.group(2);
+        String arrayName = matcher.group(3);
+        VarTree values = readTree(arrayName);
+        String body = matcher.group(4); //.trim()
+        String id = matcher.group(5);
         
-        if (matcher.group(2).equals(matcher.group(5))) {
-            Iterator<Map.Entry<String, VarTree>> iterator = loopValues.getIterator();
+        if (var.equals(id)) {
+            Iterator<Map.Entry<String, VarTree>> iterator = values.getIterator();
             while(iterator.hasNext()) {
                 Map.Entry<String, VarTree> entry = iterator.next();
                 String key = entry.getKey();
-                VarTree subtree = loopValues.get(key);
-                this.tree.put(loopVar, subtree);
-                JHTPP tp = new JHTPP("Text", loopBody, this.tree);
+                VarTree subtree = values.get(key);
+                this.tree.put(var, subtree);
+                JHTPP tp = new JHTPP(InputType.CONTENT, body, this.tree);
+
                 output.append(tp.processText());
             }
         }
         return output.toString();
     }
 
-    
-    public String processText() throws IOException  { 
-        return processText(this.text); 
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
+    private String handleIf(Matcher matcher) throws IOException {
+        StringBuilder output = new StringBuilder();
+        String condition = matcher.group(6);
+        String body = matcher.group(7); //.trim()
+        String id = matcher.group(8);
+
+        if (!condition.equals(id))
+            return "";
+
+        JHTPP tp = new JHTPP(InputType.CONTENT, body, this.tree);
+        output.append(tp.processText());
+        
+        return output.toString();
     }
+
+    //                                                                 //
+    //-----------------------------------------------------------------//
+    //------------------------- TEXT PROCESSOR ------------------------//
+    //-----------------------------------------------------------------//
+    //                                                                 //
 
     /**
      * @brief Preprocesador de HyperText
@@ -160,8 +243,9 @@ public class JHTPP {
      * @return El texto procesado
      * @throws IOException
      */
-    public String processText(String input) throws IOException {
-        Pattern pattern = Pattern.compile(REG_EXP_VAR + "|" + REG_EXP_FOR, Pattern.DOTALL);
+    private String processText(String input) throws IOException {
+        // PS: Pattern.DOTALL, hace que el '.' pueda ser cualquier cosa (incluyendo \n)
+        Pattern pattern = Pattern.compile(REG_EXP_VAR + "|" + REG_EXP_FOR + "|" + REG_EXP_IF, Pattern.DOTALL);
         Matcher matcher = pattern.matcher(input);
         StringBuilder output = new StringBuilder();
         int lastEnd = 0;
@@ -170,18 +254,50 @@ public class JHTPP {
             // Añadimos al output desde el inicio del texto hasta que encontremos una exp. reg.
             output.append(input, lastEnd, matcher.start());
 
+            boolean varCondition =  matcher.group(1) != null;
             // Si encontramos una del tipo {{var}}
-            if (matcher.group(1) != null) {
+            if (varCondition) {
                 output.append(handleVar(matcher));
             }
+
+            boolean forCondition =  matcher.group(2) != null && 
+                                    matcher.group(3) != null && 
+                                    matcher.group(4) != null && 
+                                    matcher.group(5) != null;
             // Si encontramos una del tipo{% for d in days %} (...) {% endfor d %}
-            if (matcher.group(2) != null && matcher.group(3) != null && matcher.group(4) != null && matcher.group(5) != null) {
+            if (forCondition) {
                 output.append(handleFor(matcher));
             }
 
+            boolean ifCondition  =  matcher.group(6) != null && 
+                                    matcher.group(7) != null && 
+                                    matcher.group(8) != null;
+            // Si encontramos una del tipo {% if cond %} (...) {% endif cond %}
+            if (ifCondition) {
+                output.append(handleIf(matcher));
+            }
             lastEnd = matcher.end();
         }
         output.append(input.substring(lastEnd));
         return output.toString();
     }
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+    
+    /**
+     * 
+     * @return Processed text
+     * @throws IOException
+     */
+    
+    public String processText() throws IOException  { 
+        return processText(this.text); 
+    }
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+    //------------------------ FIN DE LA CLASE ------------------------//
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
 }
