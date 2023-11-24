@@ -253,9 +253,9 @@ public class JHTPP {
      * @return Returns the processed if
      * @throws IOException
      * TODO: 'cond' needs to be analized & group(8) needs to be deleted
+     * ! NOT FINISHED, NEEDS TO BE DONE
      */
     private String handleIf(Matcher matcher) throws IOException {
-
         String condition = matcher.group(6);
         String id = matcher.group(8);
         if (!condition.equals(id))  return ""; //TODO
