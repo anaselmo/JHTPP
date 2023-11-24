@@ -5,14 +5,14 @@
  * @repo           :  github.com/anaselmo/JHTPP
  * @createdOn      :  15/11/2023
  * @description    :  Really basic Main Class as demo of the JHTPP Class
- *                    Read 'README.md' to further information
+ *                    Read 'README.md' for further information
  *------------------------------------------------------------------------**/
 
 import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        // TODO: This defs need to be changed ASAP
+        // TODO: This definitions need to be changed ASAP
         VarTree dias = new VarTree();
         VarTree lunes = new VarTree();
         VarTree martes = new VarTree();
@@ -44,7 +44,7 @@ public class Main {
         dias.put("5",sabado);
         dias.put("6",domingo);
 
-        //dias.add(lunes,martes,miercoles,jueves,viernes,sabado,domingo);
+        ////dias.add(lunes,martes,miercoles,jueves,viernes,sabado,domingo);
 
         lunes.put("ejercicios",ejer_lunes);
         lunes.put("nombre","Lunes");

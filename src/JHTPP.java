@@ -17,72 +17,73 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class JHTPP {
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
-    //----------------------- CLASS ATTRIBUTES ------------------------//
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
+    //!---------------------- CLASS ATTRIBUTES -----------------------!//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //---------------- CONSTANTS - REGULAR EXPRESSIONS ----------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*--------------- CONSTANTS - REGULAR EXPRESSIONS ---------------*//
+    //*---------------------------------------------------------------*//
 
-    // We define the regular expression: 
-    // {{var}}
-    //
-    // Group 1 -> var
-    final private String REG_EXP_VAR =  
-        "\\{\\{\\s*([^\\s]+)\\s*\\}\\}";    // Group 1
+    final private String REGEX_NAME = "[[a-z][A-Z0-9]*]+";
 
-    // We define the regular expression: 
-    // {% for x in array %} (...) {% endfor x %}
-    //
-    // Group 2 -> first 'x'
-    // Group 3 -> 'array'
-    // Group 4 -> '(...)', i.e., the loop body
-    // Group 5 -> last 'x'  //TODO: We will eventually remove this, unnecessary
-    final private String REG_EXP_FOR = 
-        "\\{\\%\\s*for\\s+([[a-z][A-Z0-9]*]+)\\s+"+             // Group 2
-        "in\\s+([a-z][a-zA-Z0-9\\.]*)\\s*\\%\\}"+               // Group 3
+    /** We define the regular expression: 
+    *! {{var}}
+    *
+    ** Group 1 -> var
+    */
+    final private String REGEXP_VAR =  
+        "\\{\\{\\s*("+REGEX_NAME+")\\s*\\}\\}";    // Group 1
+
+    /** We define the regular expression: 
+    *! {% for x in array %} (...) {% endfor x %}
+    *
+    ** Group 2 -> first 'x'
+    ** Group 3 -> 'array'
+    ** Group 4 -> '(...)', i.e., the loop body
+    ** Group 5 -> last 'x'  //TODO: We will eventually remove this, unnecessary
+    */
+    final private String REGEXP_FOR = 
+        "\\{\\%\\s*for\\s+("+REGEX_NAME+")\\s+"+                // Group 2
+        ////"in\\s+([a-z][a-zA-Z0-9\\.]*)\\s*\\%\\}"+               // Group 3
+        "in\\s+("+REGEX_NAME+"\\.*"+REGEX_NAME+")\\s*\\%\\}"+   // Group 3
         "[\\n\\t\\s]*(.+)[\\n\\t\\s]*"+                         // Group 4
         "\\{\\%\\s*endfor\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}";    // Group 5
     
-    // We define the regular expression: 
-    // {% if cond %} (...) {% endif cond %}
-    //
-    // Group 6 -> first 'cond'
-    // Group 7 -> '(...)', i.e., the if body
-    // Group 8 -> last 'cond' //TODO: We will eventually remove this, unnecessary
-    final private String REG_EXP_IF  =  
-        "\\{\\%\\s*if\\s+([[a-z][A-Z0-9]*]+)\\s*\\%\\}"+        // Group 6
+    /** We define the regular expression: 
+    *! {% if cond %} (...) {% endif cond %}
+    *
+    ** Group 6 -> first 'cond'
+    ** Group 7 -> '(...)', i.e., the if body
+    ** Group 8 -> last 'cond'
+    * TODO: We'll eventually remove group 8, unnecessary
+    */
+    final private String REGEXP_IF  =  
+        "\\{\\%\\s*if\\s+("+REGEX_NAME+")\\s*\\%\\}"+           // Group 6
         "[\\n*\\t*\\s*]*(.+)[\\n*\\t*\\s*]*?"+                  // Group 7
-        "\\{\\%\\s*endif\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}";     // Group 8 
+        "\\{\\%\\s*endif\\s*("+REGEX_NAME+")\\s*\\%\\}";        // Group 8 
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //--------------------------- VARIABLES ---------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*-------------------------- VARIABLES --------------------------*//
+    //*---------------------------------------------------------------*//
     
     private String text;
     private VarTree tree;
 
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
-    //------------------------ CLASS METHODS --------------------------//
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
+    //!------------------------ CLASS METHODS ------------------------!//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //--------------------------- CONSTRUCTOR -------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*--------------------------- CONSTRUCTOR -----------------------*//
+    //*---------------------------------------------------------------*//
 
     /**
-     * @brief Constructor of the JHTPP class
+     ** Constructor of the JHTPP class
      * @param type  'InputType.PATH' or 'InputType.CONTENT' depending of str 
      * @param str   The path of the file or the file content
      * @param tree  The tree were the variables are stored
@@ -96,15 +97,13 @@ public class JHTPP {
         this.tree = tree;
     }
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //------------------------- PATH TO STRING ------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*------------------------ PATH TO STRING -----------------------*//
+    //*---------------------------------------------------------------*//
 
     /**
-     * @brief Creates a string with the content of the file in the path 
-     * given as a parameter
+     ** Creates a string with the content of the file in the path 
+     ** given as a parameter
      * @param path File path (ej: /path/to/file.html)
      * @return The file in String format
      * @throws IOException
@@ -123,59 +122,66 @@ public class JHTPP {
         return output_string.toString();
     }
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //-------------------------- READ METHODS -------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*------------------------- READ METHODS ------------------------*//
+    //*---------------------------------------------------------------*//
 
     /**
-     * @brief Reads a String variable of the Hyper Text stored in the tree.
-     * Used when we handle the 'var' structure, it is the value of the var.
+     ** Reads a String variable of the Hyper Text stored in the tree.
+     ** Used when we handle the 'var' structure, it is the value of the var.
      * @example In tree --> [var] = String <---> [name]="Guillermo".
-     * or --> [days[0].name] = "Monday"
+     * or --> [days.0.name] = "Monday"
      * @param var Name of the variable ('key' in the VarTree)
      * @return A String with the corresponding value (stored in the tree)
      */
     private String readVar(String var) {
         String[] parts = var.split("\\.");
-        if (parts.length<=1) return tree.getString(var);
-        VarTree aux = this.tree;
-        for (int i=0; i < parts.length-1; ++i) {
-            aux = aux.get(parts[i]);
+
+        //// if there is only level
+        //// then we just return the String stored in that key
+        ////if (parts.length<=1) return tree.getString(var);
+
+        VarTree final_tree = this.tree;
+        int depth = 0;
+
+        while (depth < parts.length) {
+            final_tree = final_tree.get(parts[depth++]);
         }
-        return aux.getString(parts[parts.length-1]);
+        return final_tree.getString(parts[depth]);
     }
 
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
 
     /**
-     * @brief Reads a variable of the Hyper Text stored in the tree. Used
-     * when we handle the 'for' structure, it is the array of values.
+     ** Reads a variable of the Hyper Text stored in the tree. Used
+     ** when we handle the 'for' structure, it is the array of values.
      * @example In tree --> [var] = VarTree <---> [days]=(VarTree)days.
      * @param var Name of the variable ('key' in the VarTree)
      * @return A VarTree with the corresponding value (stored in the tree)
      */
     private VarTree readTree(String var) {
         String[] parts = var.split("\\.");
-        if (parts.length==0) return tree.get(var);
 
-        VarTree aux = this.tree;
-        for (int i=0; i < parts.length-1; ++i) {
-            aux = aux.get(parts[i]);
+        //// if there is only one level
+        //// then we just return the tree stored in that key 
+        ////if (parts.length<=1) return tree.get(var);
+
+        VarTree final_tree = this.tree;
+        int depth = 0;
+
+        while (depth < parts.length) {
+            final_tree = final_tree.get(parts[depth++]);
         }
-        return aux.get(parts[parts.length-1]);
+        return final_tree.get(parts[depth]);
     }
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //---------------------------- HANDLERS ---------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*--------------------------- HANDLERS --------------------------*//
+    //*---------------------------------------------------------------*//
 
     /**
-     * @brief Handles the regular expressions of the type: {{var}}
+     ** Handles the regular expressions of the type: {{var}}
      * @param matcher Stores the matches of the regular expressions
      * given in this.text
      * @return Returns the processed variable (if exists)
@@ -197,8 +203,8 @@ public class JHTPP {
     //-----------------------------------------------------------------//
 
     /**
-     * @brief Handles the regular expressions of the type:
-     * {% for x in array %} (...) {% endfor x %}
+     ** Handles the regular expressions of the type:
+     ** {% for x in array %} (...) {% endfor x %}
      * @param matcher Stores the matches of the regular expressions
      * given in this.text
      * @return Returns the processed loop (if exists)
@@ -232,13 +238,14 @@ public class JHTPP {
     //-----------------------------------------------------------------//
 
     /**
-     * @brief Handles the regular expressions of the type:
-     * {% if cond %} (...) {% endif cond %}
+     ** Handles the regular expressions of the type:
+     ** {% if cond %} (...) {% endif cond %}
      * @param matcher Stores the matches of the regular expressions
      * given in this.text
      * @return Returns the processed if
      * @throws IOException
-     */ //TODO: 'cond' needs to be analized & group(8) needs to be deleted
+     * TODO: 'cond' needs to be analized & group(8) needs to be deleted
+     */
     private String handleIf(Matcher matcher) throws IOException {
         StringBuilder output = new StringBuilder();
         String condition = matcher.group(6);
@@ -253,21 +260,19 @@ public class JHTPP {
         return output.toString();
     }
 
-    //                                                                 //
-    //-----------------------------------------------------------------//
-    //------------------------- TEXT PROCESSOR ------------------------//
-    //-----------------------------------------------------------------//
-    //                                                                 //
+    //*---------------------------------------------------------------*//
+    //*------------------------ TEXT PROCESSOR -----------------------*//
+    //*---------------------------------------------------------------*//
 
     /**
-     * @brief Preprocesses Hyper Text
+     ** Preprocesses Hyper Text
      * @param input Text we are going to process
      * @return The processed text
      * @throws IOException
      */
     private String processText(String input) throws IOException {
         // Pattern.DOTALL, means that '.' can be anything (including '\n')
-        Pattern pattern = Pattern.compile(REG_EXP_VAR + "|" + REG_EXP_FOR + "|" + REG_EXP_IF, Pattern.DOTALL);
+        Pattern pattern = Pattern.compile(REGEXP_VAR + "|" + REGEXP_FOR + "|" + REGEXP_IF, Pattern.DOTALL);
         Matcher matcher = pattern.matcher(input);
         StringBuilder output = new StringBuilder();
         int lastEnd = 0;
@@ -308,7 +313,7 @@ public class JHTPP {
     //-----------------------------------------------------------------//
     
     /**
-     * @brief Method the user will call to process the text given in the 
+     ** Method the user will call to process the text given in the 
      * constructor. It triggers the private method String processText(String).
      * @return Processed text
      * @throws IOException
@@ -318,9 +323,9 @@ public class JHTPP {
         return processText(this.text); 
     }
 
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
-    //-------------------------- END OF JHTPP -------------------------//
-    //-----------------------------------------------------------------//
-    //-----------------------------------------------------------------//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
+    //!------------------------- END OF JHTPP ------------------------!//
+    //!---------------------------------------------------------------!//
+    //!---------------------------------------------------------------!//
 }
