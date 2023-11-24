@@ -2,32 +2,33 @@
  * ?                        Java Hypertext Preproccesor
  * ?                               (Main Class)
  * @author         :  anaselmo & YarasAtomic
- * @repo           :  
+ * @repo           :  github.com/anaselmo/JHTPP
  * @createdOn      :  15/11/2023
- * @description    :  Really basic Java Hypertext Preproccesor (JHTPP)
+ * @description    :  Really basic Main Class as demo of the JHTPP Class
+ *                    Read 'README.md' to further information
  *------------------------------------------------------------------------**/
 
 import java.io.IOException;
 
-
 public class Main {
     public static void main(String[] args) throws IOException {
+        // TODO: This defs need to be changed ASAP
         VarTree dias = new VarTree();
-        VarTree lunes = new VarTree(); 
-        VarTree martes = new VarTree(); 
-        VarTree miercoles = new VarTree(); 
-        VarTree jueves = new VarTree(); 
-        VarTree viernes = new VarTree(); 
-        VarTree sabado = new VarTree(); 
-        VarTree domingo = new VarTree(); 
+        VarTree lunes = new VarTree();
+        VarTree martes = new VarTree();
+        VarTree miercoles = new VarTree();
+        VarTree jueves = new VarTree();
+        VarTree viernes = new VarTree();
+        VarTree sabado = new VarTree();
+        VarTree domingo = new VarTree();
 
         VarTree ejer_lunes = new VarTree();
-        VarTree ejer_martes = new VarTree(); 
-        VarTree ejer_miercoles = new VarTree(); 
-        VarTree ejer_jueves = new VarTree(); 
-        VarTree ejer_viernes = new VarTree(); 
-        VarTree ejer_sabado = new VarTree(); 
-        VarTree ejer_domingo = new VarTree(); 
+        VarTree ejer_martes = new VarTree();
+        VarTree ejer_miercoles = new VarTree();
+        VarTree ejer_jueves = new VarTree();
+        VarTree ejer_viernes = new VarTree();
+        VarTree ejer_sabado = new VarTree();
+        VarTree ejer_domingo = new VarTree();
 
         VarTree lista = new VarTree();
 
