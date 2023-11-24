@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mi primera pagina web</title>
+    <title>My first web page</title>
 </head>
 <body>
-    <h1>Hola, {{nombre}}!</h1>
-    <p>Bienvenido a mi primera pagina web, {{nombre3}}!</p>
+    <h1>Hello, {{name}}!</h1>
+    <p>Welcome to my web page, {{otherName}}!</p>
     
-    {% for d1 in dias %}
-    {{d1.nombre}}
-        {%for exercise in d1.ejercicios %}
-        <p>{{exercise}}</p>
-        {%endfor exercise%}
-    {%endfor d1 %}
+    {% for d in days %}
+    {{d.name}}
+        {%for ex in d.exercises %}
+        <p>{{ex}}</p>
+        {%endfor ex%}
+    {%endfor d %}
 
     {% if a %}
-    Hola
-    HOLA
+    Hello
+    HI
     {% endif a %}
 
-    <div>{{dias.0.nombre}}</div>
+    <div>{{days.1.name}}</div>
 
 </body>
 </html>

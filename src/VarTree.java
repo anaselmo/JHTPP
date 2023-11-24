@@ -11,9 +11,10 @@
  *------------------------------------------------------------------------**/
 import java.util.TreeMap;
 import java.util.Map;
+import java.util.Collections;
 import java.util.Iterator;
 
-public class VarTree {
+public class VarTree implements Iterable<Map.Entry<String, VarTree>> {
     //!---------------------------------------------------------------!//
     //!---------------------------------------------------------------!//
     //!---------------------- CLASS ATTRIBUTES -----------------------!//
@@ -22,8 +23,8 @@ public class VarTree {
 
     private String text = null;
     private double num = 0;
-    private TreeMap<String,VarTree> subTree;
-    private VarType type = VarType.NONE;
+    private TreeMap<String, VarTree> subTree = new TreeMap<>();
+    private VarType type = VarType.TREE;
 
     //!---------------------------------------------------------------!//
     //!---------------------------------------------------------------!//
@@ -35,14 +36,24 @@ public class VarTree {
     //*------------------------- CONSTRUCTORS ------------------------*//
     //*---------------------------------------------------------------*//
 
-    public VarTree(String text) {
-        this.text = text;
+    /**
+     ** Constructor for creating a VarTree with text.
+     *
+     * @param text The text value to be stored in the VarTree.
+     */
+    public VarTree(String s) {
+        this.text = s;
         type = VarType.TEXT;
     }
 
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
 
+    /**
+     ** Constructor for creating a VarTree with a numeric value.
+     *
+     * @param n The numeric value to be stored in the VarTree.
+     */
     public VarTree(double n) {
         this.num = n;
         type = VarType.NUMBER;
@@ -51,6 +62,9 @@ public class VarTree {
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
 
+    /**
+     ** Default constructor for creating an empty VarTree.
+     */
     public VarTree(){
     }
 
@@ -58,48 +72,81 @@ public class VarTree {
     //*------------------------- PUT METHODS -------------------------*//
     //*---------------------------------------------------------------*//
 
-    public void put(String key,String text) {
-        if (type==VarType.TREE) {
-            subTree.put(key, new VarTree(text));
-        } else if (type==VarType.NONE) {
-            subTree = new TreeMap<>();
-            subTree.put(key, new VarTree(text));
-            type = VarType.TREE;
-        }
+    /**
+     ** Put method for adding a new VarTree with text.
+     *
+     * @param key The key for the new VarTree.
+     * @param text The text value to be stored in the new VarTree.
+     */
+    public void put(String key, String text) {
+        subTree.put(key, new VarTree(text));
+        
+        //TODO Original code, need to ask YarasAtomic:
+        //if (type==VarType.TREE) {
+        //    subTree.put(key, new VarTree(text));
+        //} else if (type==VarType.NONE) {
+        //    subTree = new TreeMap<>();
+        //    subTree.put(key, new VarTree(text));
+        //    type = VarType.TREE;
+        //}
     }
 
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
 
+    /**
+     **  Put method for adding a new VarTree.
+     *
+     * @param key The key for the new VarTree.
+     * @param tree The VarTree to be stored.
+     */
     public void put(String key, VarTree tree) {
-        if (type==VarType.TREE) {
-            subTree.put(key, tree);
-        } else if(type==VarType.NONE){
-            subTree = new TreeMap<>();
-            subTree.put(key, tree);
-            type = VarType.TREE;
-        }
+        subTree.put(key, tree);
+
+        //TODO: Original code, need to ask YarasAtomic:
+        //if (type==VarType.TREE) {
+        //    subTree.put(key, tree);
+        //} else if(type==VarType.NONE){
+        //    subTree = new TreeMap<>();
+        //    subTree.put(key, tree);
+        //    type = VarType.TREE;
+        //}
     }
 
     //*---------------------------------------------------------------*//
     //*------------------------- GET METHODS -------------------------*//
     //*---------------------------------------------------------------*//
 
+    /**
+     ** Returns the string representation of the value associated with 
+     ** the given key.
+     *
+     * @param key The key to look up.
+     * @return The string representation of the value, or an empty string 
+     * if not found or not applicable.
+     */
     public String getString(String key) {
-        if (type==VarType.TREE) {
-            VarTree value = subTree.get(key);
-            if (value.type==VarType.TEXT) {
-                return value.text;
-            } else if (value.type==VarType.NUMBER) {
-                return Double.toString(value.num);
-            }
+        VarTree value = subTree.get(key);
+        if (type != VarType.TREE || value == null) { 
+            return "";
         }
-        return "";
+        
+        switch (value.type) {
+            case TEXT:   return value.text;
+            case NUMBER: return String.valueOf(value.num);
+            default:     return "";
+        }
     }
 
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
 
+    /**
+     ** Gets the VarTree associated with the given key.
+     *
+     * @param key The key to look up.
+     * @return The VarTree associated with the key.
+     */
     public VarTree get(String key) {
         return subTree.get(key);
     }
@@ -108,6 +155,12 @@ public class VarTree {
     //*------------------------ REMOVE METHOD ------------------------*//
     //*---------------------------------------------------------------*//
 
+    /**
+     * Removes the VarTree associated with the given key.
+     *
+     * @param key The key to look up.
+     * @return The removed VarTree.
+     */
     public VarTree remove(String key) {
         return subTree.remove(key);
     }
@@ -116,11 +169,19 @@ public class VarTree {
     //*------------------------ ITERATOR METHOD ----------------------*//
     //*---------------------------------------------------------------*//
 
-    public Iterator<Map.Entry<String, VarTree>> getIterator() {
+    /**
+     ** Provides an iterator over the entries of the VarTree.
+     * 
+     * @return An iterator over the entries, 
+     * or an empty iterator if the VarTree is not of type TREE.
+     */
+    @Override
+    public Iterator<Map.Entry<String, VarTree>> iterator() {
         if (type == VarType.TREE) {
             return subTree.entrySet().iterator();
+        } else {
+            return Collections.emptyIterator();
         }
-        return null;
     }
 
     //!---------------------------------------------------------------!//
