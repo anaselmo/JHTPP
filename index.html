@@ -20,7 +20,12 @@
         {{ex}}
         {% endfor %}
     {% endfor %}
-
     ===============================================
+    {% if name == name %}
+        '{{name}}' equals '{{name}}'
+    {% endif %}
+    {% if name != otherName %}
+        '{{name}}' doesn't equals '{{otherName}}'
+    {% endif %}
 </body>
 </html>
