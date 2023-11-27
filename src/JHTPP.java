@@ -26,53 +26,61 @@ public class JHTPP {
     //*--------------- CONSTANTS - REGULAR EXPRESSIONS ---------------*//
     //*---------------------------------------------------------------*//
 
-    private static final String REGEX_NAME = 
-        "[[a-z][A-Z0-9]*]+";
-    private static final String REGEX_DATA = 
-        REGEX_NAME+"["+"\\."+REGEX_NAME+"]*";
+    private static final String WORD = "\\w+";
+    private static final String VAR = WORD+"(\\."+WORD+")*";
 
     //-----------------------------------------------------------------//
 
     /** We define the regular expression: 
-    *! {{var}}
+    *! '{{var}}'
     *
-    ** Group 1 -> var
+    ** Group <var>          -> '{{var}}'
+    **      Group <varName> -> 'var'
     * TODO: Change '.*?' with 'REGEX_DATA', don't know why it doesn't work
     */
     private static final String REGEXP_VAR =  
-        "\\{\\{\\s*("+".*?"+")\\s*\\}\\}";                      // Group 1
+        "(?<var>\\{\\{(?<varName>"+VAR+")\\}\\})";
 
     //-----------------------------------------------------------------//
 
-    /** We define the regular expression: 
-    *! {% for x in array %} (...) {% endfor x %}
+    /** We define the regular expression <for>: 
+    *! {% for x in array %} (...) {% endfor %}
     *
-    ** Group 2 -> first 'x'
-    ** Group 3 -> 'array'
-    ** Group 4 -> '(...)', i.e., the loop body
-    ** Group 5 -> last 'x'  //TODO: We will eventually remove this, unnecessary
+    ** Group <for>                  -> {% for x in array %} (...) {% endfor %}
+    **      Group <forBegin>        -> '{% for x in array %}'
+    **          Group <forElement>  -> 'x'
+    **          Group <forArray>    -> 'array'
+    **          Group <forBody>     -> '(...)', i.e., the loop body
+    **      Group <forEnd>          -> '{% endfor x %}'
     */
+    private static final String REGEXP_FORBEGIN = 
+        "(?<forBegin>\\{\\%\\s*for\\s+(?<forElement>"+WORD+")\\s+"+
+        "in\\s+(?<forArray>"+VAR+")\\s*\\%\\})";
+
+    private static final String REGEXP_FOREND =
+        "(?<forEnd>\\{\\%\\s*endfor\\s*\\%\\})";
+
     private static final String REGEXP_FOR = 
-        "\\{\\%\\s*for\\s+("+REGEX_DATA+")\\s+"+                // Group 2
-        ////"in\\s+([a-z][a-zA-Z0-9\\.]*)\\s*\\%\\}"+               // Group 3
-        "in\\s+("+REGEX_DATA+"\\.*"+REGEX_DATA+")\\s*\\%\\}"+   // Group 3
-        "[\\n\\t\\s]*(.+)[\\n\\t\\s]*"+                         // Group 4
-        "\\{\\%\\s*endfor\\s*([[a-z][A-Z0-9]*]+)\\s*\\%\\}";    // Group 5
+        "(?<for>"+REGEXP_FORBEGIN +
+        "(?<forBody>.*)"+
+        REGEXP_FOREND+")";
 
     //-----------------------------------------------------------------//
     
     /** We define the regular expression: 
     *! {% if cond %} (...) {% endif cond %}
     *
-    ** Group 6 -> first 'cond'
-    ** Group 7 -> '(...)', i.e., the if body
-    ** Group 8 -> last 'cond'
-    * TODO: We'll eventually remove group 8, unnecessary
+    ** Group <if>                   -> '{% if cond %} (...) {% endif %}'
+    **      Group <ifBegin>         -> '{% if cond %}'
+    **          Group <ifCondition> -> 'cond'
+    **          Group <ifBody>      -> '(...)'
+    **      Group <ifEnd>           -> '{% endif %}'
+    * TODO: Create the REGEXP for IF
     */
     private static final String REGEXP_IF  =  
-        "\\{\\%\\s*if\\s+("+REGEX_NAME+")\\s*\\%\\}"+           // Group 6
-        "[\\n*\\t*\\s*]*(.+)[\\n*\\t*\\s*]*?"+                  // Group 7
-        "\\{\\%\\s*endif\\s*("+REGEX_NAME+")\\s*\\%\\}";        // Group 8 
+        "\\{\\%\\s*if\\s+("+VAR+")\\s*\\%\\}"+
+        "[\\n*\\t*\\s*]*(.+)[\\n*\\t*\\s*]*?"+
+        "\\{\\%\\s*endif\\s*("+VAR+")\\s*\\%\\}";
 
     //*---------------------------------------------------------------*//
     //*-------------------------- VARIABLES --------------------------*//
@@ -137,16 +145,6 @@ public class JHTPP {
     //*------------------------- READ METHODS ------------------------*//
     //*---------------------------------------------------------------*//
 
-    // // private VarTree finalTree(String var) {
-    // //     String[] parts = var.split("\\.");
-    // //     VarTree final_tree = this.tree;
-    // //     int depth = 0;
-        
-    // //     while (depth < parts.length-1) {
-    // //         final_tree = final_tree.get(parts[depth++]);
-    // //     }
-    // //     return final_tree;
-    // // }
     /**
      ** Reads a String variable of the Hyper Text stored in the tree.
      ** Used when we handle the 'var' structure, it is the value of the var.
@@ -164,6 +162,7 @@ public class JHTPP {
         while (depth < parts.length-1) {
             final_tree = final_tree.get(parts[depth++]);
         }
+
         return final_tree.getString(parts[depth]);
     }
 
@@ -202,10 +201,71 @@ public class JHTPP {
      * @return Returns the processed variable (if exists)
      */
     private String handleVar(Matcher matcher) {
-        String varName = matcher.group(1);
+        String varName = matcher.group("varName");
         String varValue = readVar(varName);
 
         return varValue != null ? varValue : "{{" + varName + "}}";
+    }
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
+    private int forStructureEnd(String forBody) {
+        Pattern patternFor = Pattern.compile(REGEXP_FORBEGIN+"|"+REGEXP_FOREND);
+        Matcher matcherFor = patternFor.matcher(forBody);
+        int forStructureEnd = 0;
+        int numberOfOpenFors = 0;
+
+        if (!matcherFor.find()) {
+            return forBody.length(); //? Es así?
+        }
+
+        do {
+            if (matcherFor.group("forBegin") != null) {
+                numberOfOpenFors++;
+            } 
+            if (matcherFor.group("forEnd") != null) {
+                numberOfOpenFors--;
+            }
+
+            forStructureEnd = matcherFor.end();
+        } while(numberOfOpenFors!=0 && matcherFor.find());
+        
+        return forStructureEnd;
+    }
+
+    //-----------------------------------------------------------------//
+    //-----------------------------------------------------------------//
+
+    private String forBody(String forStructure) throws IOException {
+        Pattern patternFor = Pattern.compile(REGEXP_FOR, Pattern.DOTALL);
+        Matcher matcherFor = patternFor.matcher(forStructure);
+
+        return matcherFor.find() ? matcherFor.group("forBody") : forStructure;
+
+        /*Pattern patternFor = Pattern.compile(REGEXP_FORBEGIN+"|"+REGEXP_FOREND);
+        Matcher matcherFor = patternFor.matcher(forStructure);
+
+        if (!matcherFor.find()) {
+            return forStructure;
+        }
+
+        int forBodyEnd = 0;
+        int numberOfOpenFors = 0;
+        int forBodyStart = matcherFor.end();
+
+        do {
+            if (matcherFor.group("forBegin") != null) {
+                numberOfOpenFors++;
+            } 
+            if (matcherFor.group("forEnd") != null) {
+                numberOfOpenFors--;
+            }
+
+            forBodyEnd = matcherFor.start();
+        } while(numberOfOpenFors!=0 && matcherFor.find());
+        
+        return forStructure.substring(forBodyStart, forBodyEnd);*/
     }
 
     //-----------------------------------------------------------------//
@@ -219,26 +279,29 @@ public class JHTPP {
      * given in this.text
      * @return Returns the processed loop (if exists)
      * @throws IOException
-     * ?: Maybe another return when ids are not equal
-     * TODO: Delete the 'id' and manage nested loops differently
      */
-    private String handleFor(Matcher matcher) throws IOException {
-        String var = matcher.group(2);
-        String id = matcher.group(5);
-        String body = matcher.group(4); //.trim()
-        if (!var.equals(id)) return body; //TODO
+    private Pair<String,String> handleFor(Matcher matcher) throws IOException {
+        String forElement = matcher.group("forElement");
+        String forArray = matcher.group("forArray");
+
+        String input = matcher.group("for");
+        int endForBody = forStructureEnd(input);
+        String forStructure = input.substring(0,endForBody);
+        String forBody = forBody(forStructure);
+        String restOfInput = input.substring(endForBody);
 
         StringBuilder output = new StringBuilder();
-        String arrayName = matcher.group(3);
-        VarTree values = readTree(arrayName);
+        VarTree values = readTree(forArray);
         
         for (Map.Entry<String, VarTree> key : values) {
             VarTree subtree = key.getValue();
-            this.tree.put(var, subtree);
-            JHTPP tp = new JHTPP(InputType.CONTENT, body, this.tree);
+            this.tree.put(forElement, subtree);
+            JHTPP tp = new JHTPP(InputType.CONTENT, forBody, this.tree);
             output.append(tp.processText());
+            this.tree.remove(forElement);
         }
-        return output.toString();
+
+        return new Pair<String,String>(output.toString(),restOfInput);
     }
 
     //-----------------------------------------------------------------//
@@ -256,9 +319,11 @@ public class JHTPP {
      * ! NOT FINISHED, NEEDS TO BE DONE
      */
     private String handleIf(Matcher matcher) throws IOException {
-        String condition = matcher.group(6);
-        String id = matcher.group(8);
-        if (!condition.equals(id))  return ""; //TODO
+        String condition = matcher.group(5);
+        String id = matcher.group(6);
+        if (!condition.equals(id)) {
+            return ""; //TODO
+        } 
 
         String body = matcher.group(7); //.trim(), maybe not necessary (?)
         JHTPP tp = new JHTPP(InputType.CONTENT, body, this.tree);
@@ -278,42 +343,43 @@ public class JHTPP {
      * @throws IOException
      */
     private String processText(String input) throws IOException {
+        StringBuilder output = new StringBuilder(input);
         // Pattern.DOTALL, means that '.' can be anything (including '\n')
-        Pattern pattern = Pattern.compile(REGEXP_VAR + "|" + REGEXP_FOR +
-                                          "|" + REGEXP_IF, Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(input);
-        StringBuilder output = new StringBuilder();
-        int lastEnd = 0;
+        Pattern pattern = Pattern.compile(REGEXP_VAR + "|" +
+                                          REGEXP_FOR, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(output);
 
-        while (matcher.find()) {
-            // We add to the output from the beginning of the text  
-            // until we find a reg. exp.
-            output.append(input, lastEnd, matcher.start());
+        for (int i=0; matcher.find(i);) {
 
-            boolean varCondition =  matcher.group(1) != null;
-            if (varCondition) {
-                output.append(handleVar(matcher));
-            }
-            boolean forCondition =  matcher.group(2) != null && 
-                                    matcher.group(3) != null && 
-                                    matcher.group(4) != null && 
-                                    matcher.group(5) != null;
-            if (forCondition) {
-                output.append(handleFor(matcher));
-            }
-            boolean ifCondition  =  matcher.group(6) != null && 
-                                    matcher.group(7) != null && 
-                                    matcher.group(8) != null;
-            if (ifCondition) {
-                output.append(handleIf(matcher));
-            }
+            if (matcher.group("var") != null) {
+                String varReplacement = handleVar(matcher);
+                output.replace(matcher.start(), 
+                               matcher.end(), 
+                               varReplacement);
 
-            // We update the end with the end of the found reg. exp. 
-            lastEnd = matcher.end();
+                i = matcher.start()+varReplacement.length();
+                matcher = pattern.matcher(output);
+            }
+            else if (matcher.group("for") != null) {
+                Pair<String,String> forStructure = handleFor(matcher);
+                String forReplacement = forStructure.first;
+                String restAfterFor = forStructure.second;
+                output.replace(matcher.start(), 
+                               matcher.end(), 
+                               forReplacement);
+
+                int endForReplacement = matcher.start() + forReplacement.length();
+                if (!restAfterFor.isEmpty()) { //? Maybe an be changed?
+                    output.replace(endForReplacement, 
+                                   endForReplacement, 
+                                   restAfterFor);
+                }
+
+                i = matcher.start()+forReplacement.length();
+                matcher = pattern.matcher(output);
+            }
         }
-        // When all matches are handled, we add the last part of the
-        // text to the output String (from 'lastEnd' to the 'EOS')
-        output.append(input.substring(lastEnd));
+        
         return output.toString();
     }
 

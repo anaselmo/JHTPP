@@ -23,8 +23,8 @@ public class VarTree implements Iterable<Map.Entry<String, VarTree>> {
 
     private String text = null;
     private double num = 0;
-    private TreeMap<String, VarTree> subTree = new TreeMap<>();
-    private VarType type = VarType.TREE;
+    private TreeMap<String, VarTree> subTree = null;
+    private VarType type = VarType.NONE;
 
     //!---------------------------------------------------------------!//
     //!---------------------------------------------------------------!//
@@ -79,16 +79,13 @@ public class VarTree implements Iterable<Map.Entry<String, VarTree>> {
      * @param text The text value to be stored in the new VarTree.
      */
     public void put(String key, String text) {
-        subTree.put(key, new VarTree(text));
-        
-        //TODO Original code, need to ask YarasAtomic:
-        //if (type==VarType.TREE) {
-        //    subTree.put(key, new VarTree(text));
-        //} else if (type==VarType.NONE) {
-        //    subTree = new TreeMap<>();
-        //    subTree.put(key, new VarTree(text));
-        //    type = VarType.TREE;
-        //}
+        if (type==VarType.TREE) {
+           subTree.put(key, new VarTree(text));
+        } else if (type==VarType.NONE) {
+           subTree = new TreeMap<>();
+           subTree.put(key, new VarTree(text));
+           type = VarType.TREE;
+        }
     }
 
     //-----------------------------------------------------------------//
@@ -101,16 +98,13 @@ public class VarTree implements Iterable<Map.Entry<String, VarTree>> {
      * @param tree The VarTree to be stored.
      */
     public void put(String key, VarTree tree) {
-        subTree.put(key, tree);
-
-        //TODO: Original code, need to ask YarasAtomic:
-        //if (type==VarType.TREE) {
-        //    subTree.put(key, tree);
-        //} else if(type==VarType.NONE){
-        //    subTree = new TreeMap<>();
-        //    subTree.put(key, tree);
-        //    type = VarType.TREE;
-        //}
+        if (type==VarType.TREE) {
+           subTree.put(key, tree);
+        } else if(type==VarType.NONE){
+           subTree = new TreeMap<>();
+           subTree.put(key, tree);
+           type = VarType.TREE;
+        }
     }
 
     //*---------------------------------------------------------------*//

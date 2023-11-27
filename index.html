@@ -6,20 +6,21 @@
 <body>
     <h1>Hello, {{name}}!</h1>
     <p>Welcome to my web page, {{otherName}}!</p>
-    
+    ===============================================
     {% for d in days %}
     {{d.name}}
-        {%for ex in d.exercises %}
-        <p>{{ex}}</p>
-        {%endfor ex%}
-    {%endfor d %}
+        {% for ex in d.exercises %}
+        {{ex}}
+        {% endfor %}
+    {% endfor %}
+    -----------------------------------------------
+    {% for d in days %}
+    {{d.name}}
+        {% for ex in d.exercises %}
+        {{ex}}
+        {% endfor %}
+    {% endfor %}
 
-    {% if a %}
-    Hello
-    HI
-    {% endif a %}
-
-    <div>{{days.1.name}}</div>
-
+    ===============================================
 </body>
 </html>
