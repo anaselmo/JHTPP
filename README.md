@@ -4,12 +4,21 @@ Really basic Hyper Text Preprocessor made in Java.
 
 # Table of Contents
 
-1. [Authors](#authors)
-2. [How to use the example](#how-to-use-the-example)
-3. [How to use the library](#how-to-use-the-library)
-    1. [In Java](#in-java)
-    2. [In HTML](#in-html)
-4. [Example](#example)
+- [Java Hyper Text Preprocessor (JHTPP)](#java-hyper-text-preprocessor-jhtpp)
+- [Table of Contents](#table-of-contents)
+  - [Authors](#authors)
+  - [How to use the example](#how-to-use-the-example)
+    - [Compile with](#compile-with)
+    - [Execute with](#execute-with)
+  - [How to use the library](#how-to-use-the-library)
+    - [In Java:](#in-java)
+    - [In HTML:](#in-html)
+      - [var clauses:](#var-clauses)
+      - [for clauses:](#for-clauses)
+      - [if clauses:](#if-clauses)
+  - [Example](#example)
+    - [Input file:](#input-file)
+    - [Output file:](#output-file)
 
 ## Authors
 
@@ -30,39 +39,46 @@ Really basic Hyper Text Preprocessor made in Java.
 ./execute.sh
 ```
 
-For now, we pass parameters through the main class (it will be changed)
+> [!NOTE]
+> For now, we pass parameters through the main class (it will be changed)
 
 ## How to use the library
 
 ### In Java:
-You have to define a `VarTree` where you will have to define the different variables and subvariables.
+You have to define a `VarTree` where you will have to define the different 
+variables and subvariables.
 
 ```Java
-VarTree a = new VarTree();
+VarTree varTree = new VarTree();
 ```
 
-You can put in `a` either:
-- A `key` and a `value`:
+You can put in `varTree` either:
+- A `key` and a `String`:
     ```Java
-    a.put("key", "value");
+    varTree.put("key", "value");
     ```
 - A `key` and another `VarTree`:
     ```Java
-    VarTree b = new VarTree();
-    a.put("key", b);
+    VarTree otherVartTree = new VarTree();
+    varTree.put("key", otherVartTree);
     ```
+> [!NOTE]
+> The key is a `String`
+
 Now, to use the JHTPP class you have to define a `JHTPP` variable:
 - Using the path of the file stored in a `String`:
     ```Java
-    JHTTP processor = new JHTTP("file", str, varTree);
+    JHTTP processor = new JHTTP(InputType.PATH, path, varTree);
     ```
 - Using the HTML content stored in a `String`:
     ```Java
-    JHTTP processor = new JHTTP("text", str, varTree);
+    JHTTP processor = new JHTTP(InputType.CONTENT, content, varTree);
     ```
-Being `str` a String and `varTree` a VarTree.
+Being `path` and `content` a String and `varTree` a VarTree.
 
 ### In HTML:
+
+#### var clauses:
 
 To represent a variable we use the next syntaxis: 
 ```
@@ -76,6 +92,7 @@ We can access the attributes of the variable:
 ```
 {{var.attribute}}
 ```
+#### for clauses:
 
 To iterate through all the attributes of a variable, we can use a `for loop` : 
 ```
@@ -93,8 +110,26 @@ Friday
 Saturday
 Sunday
 ```
+> [!NOTE]
+> Nested loops are possible.
+> 
+#### if clauses:
 
-Nested loops are possible.
+To create a `if structure` you can write for example:
+```
+{% if name != otherName %}
+    '{{name}}' doesn't equal '{{otherName}}'
+{% endif %}
+```
+And the output would be:
+```
+'Anaselmo' doesn't equal 'YarasAtomic'
+```
+> [!WARNING]
+> For now we only have `==` and `!=`, and they have a really 
+> basic functionality.  
+> Implementation needs to be done
+
 
 ## Example
 
@@ -105,11 +140,22 @@ Nested loops are possible.
 <html>
 <body>
     <h1>Hello, {{name}}!</h1>
-    <p>Welcome to my web, {{name2}}!</p>
+    <p>Welcome to my web, {{otherName}}!</p>
+
+    ===============================================
     
-    {% for d1 in days %}
-    {{d1.name}}
-    {%endfor d1 %}
+    {% for d in days %}
+    {{d.name}}
+        {% for ex in d.exercises %}
+        {{ex}}
+        {% endfor %}
+    {% endfor %}
+
+    ===============================================
+
+    {% if name != otherName %}
+        '{{name}}' doesn't equal '{{otherName}}'
+    {% endif %}
 
 </body>
 </html>
@@ -121,16 +167,41 @@ Nested loops are possible.
 <!DOCTYPE html>
 <html>
 <body>
-    <h1>Hello, YarasAtomic!</h1>
-    <p>Welcome to my web, Anaselmo!</p>
+    <h1>Hello, Anaselmo!</h1>
+    <p>Welcome to my web, YarasAtomic!</p>
+
+    ===============================================
     
-    Monday  
+    Monday
+        Chest
+        Back
+
     Tuesday
+        Biceps
+        Triceps
+        Shoulder
+
     Wednesday
-    Thrusday
+        Leg
+        
+    Thursday
+        Chest
+        Back
+
     Friday
+        Biceps
+        Triceps
+        Shoulder
+
     Saturday
+        Leg
+
     Sunday
+        Rest!
+
+    ===============================================
+
+    'Anaselmo' doesn't equal 'YarasAtomic'
     
 </body>
 </html>

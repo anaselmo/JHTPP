@@ -89,8 +89,8 @@ public class Main {
 
         VarTree listTree = new VarTree();
         listTree.put("days", daysTree);
-        listTree.put("name", "Guillermo");
-        listTree.put("otherName", "Juan");
+        listTree.put("name", "Anaselmo");
+        listTree.put("otherName", "YarasAtomic");
 
         //-----------------------------------------------------------------//
         //-----------------------------------------------------------------//
