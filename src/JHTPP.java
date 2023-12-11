@@ -72,9 +72,7 @@ public class JHTPP {
         new Group("forEnd","(?<forEnd>\\{\\%\\s*endfor\\s*\\%\\})");
 
     private static final Group FOR = 
-        new Group("for", "(?<for>"+FOR_BEGIN+
-                              FOR_BODY+
-                              FOR_END+")");
+        new Group("for", "(?<for>"+FOR_BEGIN+FOR_BODY+FOR_END+")");
 
     //-----------------------------------------------------------------//
     //-----------------------------------------------------------------//
@@ -115,9 +113,7 @@ public class JHTPP {
         new Group("ifEnd","(?<ifEnd>\\{\\%\\s*endif\\s*\\%\\})");
 
     private static final Group IF = 
-        new Group("if", "(?<if>"+IF_BEGIN+
-                              IF_BODY+
-                              IF_END+")");
+        new Group("if", "(?<if>"+IF_BEGIN+IF_BODY+IF_END+")");
 
     //*---------------------------------------------------------------*//
     //*-------------------------- VARIABLES --------------------------*//
@@ -138,7 +134,7 @@ public class JHTPP {
 
     /**
      ** Constructor of the JHTPP class
-     *
+     * 
      * @param type  'InputType.PATH' or 'InputType.CONTENT' depending of str 
      * @param str   the path of the file or the file content
      * @param tree  the tree where the variables are stored
@@ -398,54 +394,44 @@ public class JHTPP {
         Matcher matcher = pattern.matcher(output);
 
         for (int i=0; matcher.find(i);) {
-
             if (matcher.group(VAR.name()) != null) {
                 String varReplacement = handleVar(matcher);
                 output.replace(matcher.start(), 
                                matcher.end(), 
                                varReplacement);
-
-                i = matcher.start()+varReplacement.length();
-                matcher = pattern.matcher(output);
+                i = varReplacement.length();
             }
             else if (matcher.group(FOR.name()) != null) {
                 Pair<String,String> forStructure = handleFor(matcher);
-                String forProcessed = forStructure.first;
+                String forReplacement = forStructure.first;
                 String restAfterFor = forStructure.second;
                 output.replace(matcher.start(), 
                                matcher.end(), 
-                               forProcessed);
+                               forReplacement);
 
-                int endForReplacement = matcher.start() + forProcessed.length();
-                if (!restAfterFor.isEmpty()) { //? Maybe an be changed?
+                int endForReplacement = matcher.start() + forReplacement.length();
                     output.replace(endForReplacement, 
                                    endForReplacement, 
                                    restAfterFor);
-                }
-
-                i = matcher.start()+forProcessed.length();
-                matcher = pattern.matcher(output);
+                i = forReplacement.length();
             }
             else if (matcher.group(IF.name()) != null) {
                 Pair<String,String> ifStructure = handleIf(matcher);
-                String ifProcessed = ifStructure.first;
-                String restAfterFor = ifStructure.second;
+                String ifReplacement = ifStructure.first;
+                String restAfterIf = ifStructure.second;
                 output.replace(matcher.start(), 
                                matcher.end(), 
-                               ifProcessed);
-
-                int endifReplacement = matcher.start() + ifProcessed.length();
-                if (!restAfterFor.isEmpty()) { //? Maybe an be changed?
+                               ifReplacement);
+                 
+                int endifReplacement = matcher.start() + ifReplacement.length();
                     output.replace(endifReplacement, 
                                    endifReplacement, 
-                                   restAfterFor);
-                }
-
-                i = matcher.start()+ifProcessed.length();
-                matcher = pattern.matcher(output);
+                                   restAfterIf);
+                i = ifReplacement.length();
             }
+            i += matcher.start();
+            matcher = pattern.matcher(output);
         }
-        
         return output.toString();
     }
 

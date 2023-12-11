@@ -30,7 +30,7 @@ public class NonGreedyStructure extends BeginEndStructure {
      * @param structureString
      * @param bodyGroup
      */
-    public NonGreedyStructure(String structureString, 
+    public NonGreedyStructure(String structureString,
                              Group bodyGroup){
                                 setText(structureString);
         Pattern patternGroup = Pattern.compile(bodyGroup.toString(),Pattern.DOTALL);
